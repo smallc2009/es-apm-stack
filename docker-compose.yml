@@ -9,7 +9,8 @@ volumes:
     driver: local
   kibanadata:
     driver: local
-
+  apmdata:
+    driver: local
 networks:
   default:
     name: elastic
@@ -54,6 +55,12 @@ services:
           "  - name: es03\n"\
           "    dns:\n"\
           "      - es03\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          "  - name: apm\n"\
+          "    dns:\n"\
+          "      - apm\n"\
           "      - localhost\n"\
           "    ip:\n"\
           "      - 127.0.0.1\n"\
@@ -249,7 +256,7 @@ services:
       timeout: 10s
       retries: 120
 
-  apm-server:
+  apm:
     image: docker.elastic.co/apm/apm-server:${STACK_VERSION}
     depends_on:
       es01:
@@ -262,20 +269,30 @@ services:
     - ${APM_PORT}:8200
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
+      - apmdata:/usr/share/apm/data
     command: >
        apm-server -e
          -E apm-server.rum.enabled=true
-         -E setup.kibana.host=kibana:5601
+         -E apm-server.kibana.protocol="https"
+         -E setup.kibana.host="kibana:5601"
          -E setup.template.settings.index.number_of_replicas=0
          -E apm-server.kibana.enabled=true
-         -E apm-server.kibana.host=kibana:5601
+         -E apm-server.kibana.host="kibana:5601"
+         -E apm-server.kibana.ssl.enabled=true
          -E apm-server.kibana.username=elastic
-         -E apm-server.kibana.password=elastic
+         -E apm-server.kibana.password=${KIBANA_PASSWORD}
+         -E apm-server.kibana.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+         -E apm-server.kibana.ssl.certificate=/usr/share/elasticsearch/config/certs/kibana/kibana.crt
+         -E apm-server.kibana.ssl.key=/usr/share/elasticsearch/config/certs/kibana/kibana.key
          -E output.elasticsearch.hosts=["https://es01:9200"]
          -E output.elasticsearch.username=elastic
-         -E output.elasticsearch.password=elastic
-         -E output.elasticsearch.ssl.certificate_authorities=/usr/share/apm/config/certs/ca/ca.crt
+         -E output.elasticsearch.password=${ELASTIC_PASSWORD}
+         -E output.elasticsearch.ssl.enabled=true
+         -E output.elasticsearch.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+         -E output.elasticsearch.ssl.certificate=/usr/share/elasticsearch/config/certs/es01/es01.crt
+         -E output.elasticsearch.ssl.key=/usr/share/elasticsearch/config/certs/es01/es01.key
+
     healthcheck:
       interval: 10s
       retries: 12
-      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:8200/
+      test: curl --cacert config/certs/ca/ca.crt --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:8200/
