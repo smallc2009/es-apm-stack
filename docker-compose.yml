@@ -230,7 +230,7 @@ services:
         ]
       interval: 10s
       timeout: 10s
-      retries: 120
+      retries: 12
 
   apm:
     image: docker.elastic.co/apm/apm-server:${STACK_VERSION}
