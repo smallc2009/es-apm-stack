@@ -244,7 +244,7 @@ services:
     ports:
     - ${APM_PORT}:8200
     volumes:
-      - certs:/usr/share/elasticsearch/config/certs
+      - /home/anson/es-apm-stack/heydevops.com:/usr/share/apm/config/certs
       - apmdata:/usr/share/apm/data
     command: >
        apm-server -e
@@ -260,16 +260,16 @@ services:
          -E apm-server.kibana.ssl.enabled=true
          -E apm-server.kibana.username=elastic
          -E apm-server.kibana.password=${KIBANA_PASSWORD}
-         -E apm-server.kibana.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/fullchain1.pem
-         -E apm-server.kibana.ssl.certificate=/usr/share/elasticsearch/config/certs/cert1.pem
-         -E apm-server.kibana.ssl.key=/usr/share/elasticsearch/config/certs/privkey1.pem
+         -E apm-server.kibana.ssl.certificate_authorities=/usr/share/apm/config/certs/fullchain1.pem
+         -E apm-server.kibana.ssl.certificate=/usr/share/apm/config/certs/cert1.pem
+         -E apm-server.kibana.ssl.key=/usr/share/apm/config/certs/privkey1.pem
          -E output.elasticsearch.hosts=["https://es01.heydevops.com:9200"]
          -E output.elasticsearch.username=elastic
          -E output.elasticsearch.password=${ELASTIC_PASSWORD}
          -E output.elasticsearch.ssl.enabled=true
-         -E output.elasticsearch.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/fullchain1.pem
-         -E output.elasticsearch.ssl.certificate=/usr/share/elasticsearch/config/certs/cert1.pem
-         -E output.elasticsearch.ssl.key=/usr/share/elasticsearch/config/certs/privkey1.pem
+         -E output.elasticsearch.ssl.certificate_authorities=/usr/share/apm/config/certs/fullchain1.pem
+         -E output.elasticsearch.ssl.certificate=/usr/share/apm/config/certs/cert1.pem
+         -E output.elasticsearch.ssl.key=/usr/share/apm/config/certs/privkey1.pem
     networks:
       elastic:
         aliases:
