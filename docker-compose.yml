@@ -251,9 +251,9 @@ services:
          -E apm-server.rum.enabled=true
          -E apm-server.kibana.protocol="https"
          -E setup.kibana.host="kibana.heydevops.com:5601"
-         -E apm-server.auth.api_key.enabled=true
+         -E apm-server.auth.api_key.enabled=false
          -E apm-server.auth.anonymous.enabled=true
-         -E apm-server.auth.anonymous.allow_agent=[go,otlp]
+         -E apm-server.auth.anonymous.allow_agent=["*"]
          -E setup.template.settings.index.number_of_replicas=0
          -E apm-server.kibana.enabled=true
          -E apm-server.kibana.host="kibana.heydevops.com:5601"
