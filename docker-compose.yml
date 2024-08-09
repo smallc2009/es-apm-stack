@@ -19,7 +19,7 @@ services:
   setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/elasticsearch/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/elasticsearch/config/certs
     user: "0"
     command: >
       bash -c '
@@ -31,9 +31,9 @@ services:
           exit 1;
         fi;
         echo "Waiting for Elasticsearch availability";
-        until curl --cacert config/certs/fullchain1.pem https://es01.heydevops.com:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+        until curl --cacert config/certs/fullchain1.pem https://es01.${ELASTIC_BASE_URL}:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
-        until curl -X POST --cacert config/certs/fullchain1.pem -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01.heydevops.com:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        until curl -X POST --cacert config/certs/fullchain1.pem -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01.${ELASTIC_BASE_URL}:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
         echo "All done!";
       '
     networks:
@@ -52,7 +52,7 @@ services:
     labels:
       co.elastic.logs/module: elasticsearch
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/elasticsearch/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/elasticsearch/config/certs
       - esdata01:/usr/share/elasticsearch/data
     ports:
       - ${ES_PORT}:9200
@@ -84,12 +84,12 @@ services:
     networks:
       elastic:
         aliases:
-          - es01.heydevops.com
+          - es01.${ELASTIC_BASE_URL}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s --cacert config/certs/fullchain1.pem https://es01.heydevops.com:9200 | grep -q 'missing authentication credentials'",
+          "curl -s --cacert config/certs/fullchain1.pem https://es01.${ELASTIC_BASE_URL}:9200 | grep -q 'missing authentication credentials'",
         ]
       interval: 10s
       timeout: 10s
@@ -103,7 +103,7 @@ services:
     labels:
       co.elastic.logs/module: elasticsearch
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/elasticsearch/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/elasticsearch/config/certs
       - esdata02:/usr/share/elasticsearch/data
     environment:
       - node.name=es02
@@ -131,12 +131,12 @@ services:
     networks:
       elastic:
         aliases:
-          - es02.heydevops.com
+          - es02.${ELASTIC_BASE_URL}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s --cacert config/certs/fullchain1.pem https://es02.heydevops.com:9200 | grep -q 'missing authentication credentials'",
+          "curl -s --cacert config/certs/fullchain1.pem https://es02.${ELASTIC_BASE_URL}:9200 | grep -q 'missing authentication credentials'",
         ]
       interval: 10s
       timeout: 10s
@@ -150,7 +150,7 @@ services:
     labels:
       co.elastic.logs/module: elasticsearch
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/elasticsearch/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/elasticsearch/config/certs
       - esdata03:/usr/share/elasticsearch/data
     environment:
       - node.name=es03
@@ -178,12 +178,12 @@ services:
     networks:
       elastic:
         aliases:
-          - es03.heydevops.com
+          - es03.${ELASTIC_BASE_URL}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s --cacert config/certs/fullchain1.pem https://es03.heydevops.com:9200 | grep -q 'missing authentication credentials'",
+          "curl -s --cacert config/certs/fullchain1.pem https://es03.${ELASTIC_BASE_URL}:9200 | grep -q 'missing authentication credentials'",
         ]
       interval: 10s
       timeout: 10s
@@ -197,14 +197,14 @@ services:
     labels:
       co.elastic.logs/module: kibana
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/kibana/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/kibana/config/certs
       - kibanadata:/usr/share/kibana/data
     ports:
       - ${KIBANA_PORT}:5601
     environment:
-      SERVER_NAME: kibana.heydevops.com
-      SERVER_PUBLICBASEURL: https://kibana.heydevops.com:5601
-      ELASTICSEARCH_HOSTS: '["https://es01.heydevops.com:9200"]'
+      SERVER_NAME: kibana.${ELASTIC_BASE_URL}
+      SERVER_PUBLICBASEURL: https://kibana.${ELASTIC_BASE_URL}:5601
+      ELASTICSEARCH_HOSTS: '["https://es01.${ELASTIC_BASE_URL}:9200"]'
       ELASTICSEARCH_USERNAME: kibana_system
       ELASTICSEARCH_PASSWORD: ${KIBANA_PASSWORD}
       ELASTICSEARCH_SSL_VERIFICATIONMODE: none
@@ -221,12 +221,12 @@ services:
     networks:
       elastic:
         aliases:
-          - kibana.heydevops.com
+          - kibana.${ELASTIC_BASE_URL}
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s -I --cacert config/certs/fullchain1.pem  https://kibana.heydevops.com:5601 | grep -q 'HTTP/1.1 302 Found'",
+          "curl -s -I --cacert config/certs/fullchain1.pem  https://kibana.${ELASTIC_BASE_URL}:5601 | grep -q 'HTTP/1.1 302 Found'",
         ]
       interval: 10s
       timeout: 10s
@@ -244,26 +244,26 @@ services:
     ports:
     - ${APM_PORT}:8200
     volumes:
-      - /home/anson/es-apm-stack/heydevops.com:/usr/share/apm/config/certs
+      - /home/anson/es-apm-stack/${ELASTIC_BASE_URL}:/usr/share/apm/config/certs
       - apmdata:/usr/share/apm/data
     command: >
        apm-server -e
          -E apm-server.rum.enabled=true
          -E apm-server.kibana.protocol="https"
-         -E setup.kibana.host="kibana.heydevops.com:5601"
+         -E setup.kibana.host="kibana.${ELASTIC_BASE_URL}:5601"
          -E apm-server.auth.api_key.enabled=false
          -E apm-server.auth.anonymous.enabled=true
          -E apm-server.auth.anonymous.allow_agent=["*"]
          -E setup.template.settings.index.number_of_replicas=0
          -E apm-server.kibana.enabled=true
-         -E apm-server.kibana.host="kibana.heydevops.com:5601"
+         -E apm-server.kibana.host="kibana.${ELASTIC_BASE_URL}:5601"
          -E apm-server.kibana.ssl.enabled=true
          -E apm-server.kibana.username=elastic
          -E apm-server.kibana.password=${KIBANA_PASSWORD}
          -E apm-server.kibana.ssl.certificate_authorities=/usr/share/apm/config/certs/fullchain1.pem
          -E apm-server.kibana.ssl.certificate=/usr/share/apm/config/certs/cert1.pem
          -E apm-server.kibana.ssl.key=/usr/share/apm/config/certs/privkey1.pem
-         -E output.elasticsearch.hosts=["https://es01.heydevops.com:9200"]
+         -E output.elasticsearch.hosts=["https://es01.${ELASTIC_BASE_URL}:9200"]
          -E output.elasticsearch.username=elastic
          -E output.elasticsearch.password=${ELASTIC_PASSWORD}
          -E output.elasticsearch.ssl.enabled=true
@@ -273,8 +273,8 @@ services:
     networks:
       elastic:
         aliases:
-          - apm.heydevops.com
+          - apm.${ELASTIC_BASE_URL}
     healthcheck:
       interval: 10s
       retries: 12
-      test: curl --cacert config/certs/ca/ca.crt --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://apm.heydevops.com:8200/
+      test: curl --cacert config/certs/ca/ca.crt --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://apm.${ELASTIC_BASE_URL}:8200/
